@@ -45,9 +45,7 @@ module ReversiMethods
     raise '無効なポジションです' if pos.invalid?
     raise 'すでに石が置かれています' unless pos.stone_color(board) == BLANK_CELL
 
-    # コピーした盤面にて石の配置を試みて、成功すれば反映する
     copied_board = Marshal.load(Marshal.dump(board))
-    copied_board[pos.row][pos.col] = stone_color # 修正
 
     turn_succeed = false
     Position::DIRECTIONS.each do |direction|
@@ -55,17 +53,25 @@ module ReversiMethods
       turn_succeed = true if turn(copied_board, next_pos, stone_color, direction)
     end
 
-    copy_board(board, copied_board) if !dry_run && turn_succeed
+    if turn_succeed
+      copied_board[pos.row][pos.col] = stone_color
+      copy_board(board, copied_board) unless dry_run
+    end
 
     turn_succeed
   end
 
   def turn(board, target_pos, attack_stone_color, direction)
     return false if target_pos.out_of_board?
-    return false if target_pos.stone_color(board) == attack_stone_color
+    cell_color = target_pos.stone_color(board)
+    return false if cell_color == BLANK_CELL
+    return false if cell_color == attack_stone_color
 
     next_pos = target_pos.next_position(direction)
-    if (next_pos.stone_color(board) == attack_stone_color) || turn(board, next_pos, attack_stone_color, direction)
+    if next_pos.stone_color(board) == attack_stone_color
+      board[target_pos.row][target_pos.col] = attack_stone_color
+      true
+    elsif turn(board, next_pos, attack_stone_color, direction)
       board[target_pos.row][target_pos.col] = attack_stone_color
       true
     else
