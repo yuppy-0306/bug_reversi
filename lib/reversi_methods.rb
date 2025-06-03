@@ -47,6 +47,7 @@ module ReversiMethods
     # コピーした盤面にて石の配置を試みて、成功すれば反映する
     
     copied_board = Marshal.load(Marshal.dump(board))
+    copied_board[pos.row][pos.col] = stone_color
 
     turn_succeed = false
     Position::DIRECTIONS.each do |direction|
@@ -54,10 +55,8 @@ module ReversiMethods
       turn_succeed = true if turn(copied_board, next_pos, stone_color, direction)
     end
 
-    if turn_succeed
-      copied_board[pos.row][pos.col] = stone_color
-      copy_board(board, copied_board) unless dry_run
-    end
+    copy_board(board, copied_board) if !dry_run && turn_succeed
+    
 
     turn_succeed
   end
